@@ -5,6 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import WebBaseLoader
@@ -49,19 +50,26 @@ Question: {input}""")
         self.updateDocs()
         vector = FAISS.from_documents(self.docs, embeddings) 
         self.retriever = vector.as_retriever()
-        
-    def runController(self):
+
+    def convert_history(self, history):
+        message_objects = []
+        for turn in history:
+            message_objects.append(HumanMessage(content=turn[0]))
+            message_objects.append(AIMessage(content=turn[1]))
+        return message_objects
+    def runController(self, prompt, history):
         self.createVectorStore()
-        while True:
+        if prompt:
             print(f"Ctrl + C to exit...")
-            res = input("Please enter your query here:")
             #doc_chain is a chain that lets you pass a document to the llm and it uses that to answer
             doc_chain = create_stuff_documents_chain(self.llm, self.prompt)
             # retrieval chain passed the load of deciding what document to use to answer to the retriever.
             retrieval_chain = create_retrieval_chain(self.retriever, doc_chain)
-
-            resp = retrieval_chain.invoke({"input":res})
-            print(f"response is {resp['answer']}")
+            history = self.convert_history(history)
+            resp = retrieval_chain.invoke({"input":prompt,"history": history})
+            response = resp['answer']
+            print(f"response is {response}")
+            return response
     
 if __name__ == "__main__":
     c = Controller()
