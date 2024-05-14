@@ -10,7 +10,8 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_community.document_loaders import UnstructuredFileLoader
+from langchain.retrievers.multi_query import MultiQueryRetriever
+
 import pytesseract
 import os
 
@@ -30,16 +31,17 @@ class Controller:
 </context>
 Question: {input}""")
         self.docs = None
+        self.isCreated = False
 
     def updateDocs(self):
         #We need a separate loader for each document. 
         self.docs = []
-        text_splitter = RecursiveCharacterTextSplitter() #creates a text splitter, which breaks apart the document into text
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, add_start_index=True) #creates a text splitter, which breaks apart the document into text
         for file in os.listdir(DOC_DIR):
             loader = PyPDFLoader(os.path.join(DOC_DIR,file))
             print(f"Document is {loader.file_path}")
             raw_doc = loader.load_and_split()
-            print(raw_doc[:5])
+            #print(raw_doc[:5])
             doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
             self.docs.extend(doc)
 
@@ -49,8 +51,12 @@ Question: {input}""")
         embeddings = OpenAIEmbeddings(model='text-embedding-3-small',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
         vector = FAISS.from_documents(self.docs, embeddings) 
-        self.retriever = vector.as_retriever()
-
+        #self.retriever = vector.as_retriever()
+        self.retriever = MultiQueryRetriever.from_llm(
+    retriever=vector.as_retriever(), llm=self.llm
+) #express query in multiple ways to improve hit rate
+        
+        self.isCreated = True
     def convert_history(self, history):
         message_objects = []
         for turn in history:
@@ -58,7 +64,8 @@ Question: {input}""")
             message_objects.append(AIMessage(content=turn[1]))
         return message_objects
     def runController(self, prompt, history):
-        self.createVectorStore()
+        if not self.isCreated:
+            self.createVectorStore()
         if prompt:
             print(f"Ctrl + C to exit...")
             #doc_chain is a chain that lets you pass a document to the llm and it uses that to answer
@@ -68,7 +75,7 @@ Question: {input}""")
             history = self.convert_history(history)
             resp = retrieval_chain.invoke({"input":prompt,"history": history})
             response = resp['answer']
-            print(f"response is {response}")
+            #print(f"response is {response}")
             return response
     
 if __name__ == "__main__":

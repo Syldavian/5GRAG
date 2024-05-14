@@ -6,7 +6,7 @@ from typing import Optional, Tuple
 from threading import Lock
 
 langchain_controller = Controller()
-
+langchain_controller.createVectorStore()
 # More improved UI
 gr.ChatInterface(
     langchain_controller.runController,
