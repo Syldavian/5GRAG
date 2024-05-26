@@ -7,8 +7,16 @@ from threading import Lock
 
 langchain_controller = Controller()
 langchain_controller.createVectorStore()
-# More improved UI
-gr.ChatInterface(
+
+
+def respond(prompt,history):
+    resp = langchain_controller.runController(prompt,history)
+    history.append((prompt,resp))
+    return history
+
+
+# More improved UI Deprecated chatInterface ise
+"""demo = gr.ChatInterface(
     langchain_controller.runController,
     chatbot=gr.Chatbot(height=500),
     textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7),
@@ -20,4 +28,17 @@ gr.ChatInterface(
     retry_btn=None,
     undo_btn="Delete Previous",
     clear_btn="Clear",
-).launch(share=True)
+)
+demo.launch(share=True)"""
+
+# idea: design function for the submit. This function will have as inputs, prompt and history
+# get history from chatbot. As output, have "", history so both q and answer will go into chatbot
+
+with gr.Blocks() as demo:
+    toggleDB = gr.Button("toggle flag")
+    toggleDB.click(fn=langchain_controller.toggleDatabase)
+    chatbot=gr.Chatbot(height=500)
+    textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7)
+    textbox.submit(respond,inputs=[textbox,chatbot],outputs=chatbot)
+
+demo.launch(share=True)
