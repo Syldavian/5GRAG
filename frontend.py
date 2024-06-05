@@ -15,6 +15,15 @@ def respond(prompt,history):
     return history
 
 
+def adjustToggle():
+    IS_DB = langchain_controller.toggleDatabase()
+    if IS_DB:
+        text = "RAG ENABLED CURRENTLY"
+    else:
+        text = "RAG DISABLED CURRENTLY"
+    return text
+
+
 # More improved UI Deprecated chatInterface ise
 """demo = gr.ChatInterface(
     langchain_controller.runController,
@@ -35,8 +44,8 @@ demo.launch(share=True)"""
 # get history from chatbot. As output, have "", history so both q and answer will go into chatbot
 
 with gr.Blocks() as demo:
-    toggleDB = gr.Button("toggle flag")
-    toggleDB.click(fn=langchain_controller.toggleDatabase)
+    toggleDB = gr.Button("RAG ENABLED CURRENTLY")
+    toggleDB.click(fn=adjustToggle,outputs = toggleDB)
     chatbot=gr.Chatbot(height=500)
     textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7)
     textbox.submit(respond,inputs=[textbox,chatbot],outputs=chatbot)

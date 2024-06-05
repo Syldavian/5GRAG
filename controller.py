@@ -57,6 +57,7 @@ Question: {input}""")
 Question: {input}""")
         else:
             self.prompt = ChatPromptTemplate.from_template("""Answer the following question as best you can Question: {input}""")
+        return self.isDatabaseTriggered
 
     def createVectorStore(self):
         """ create the vector database which will store the vector embeddings of the\
