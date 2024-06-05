@@ -61,7 +61,7 @@ Question: {input}""")
     def createVectorStore(self):
         """ create the vector database which will store the vector embeddings of the\
               documents that will be retrieved."""
-        embeddings = OpenAIEmbeddings(model='text-embedding-3-small',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
+        embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
         vector = FAISS.from_documents(self.docs, embeddings) 
         #self.retriever = vector.as_retriever()
