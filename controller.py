@@ -14,6 +14,7 @@ from langchain.retrievers.multi_query import MultiQueryRetriever
 
 import pytesseract
 import os
+import pickle
 
 pytesseract.pytesseract.tesseract_cmd = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -41,7 +42,13 @@ Question: {input}""")
         for file in os.listdir(DOC_DIR):
             loader = PyPDFLoader(os.path.join(DOC_DIR,file))
             print(f"Document is {loader.file_path}")
-            raw_doc = loader.load_and_split()
+            # raw_doc = loader.load_and_split() 
+
+            # Adam Chen Pickle Mode
+            with open(os.path.join(DOC_DIR,file), 'rb') as handle:
+                raw_doc = pickle.load(handle)    
+            # End Pickle mode
+
             #print(raw_doc[:5])
             doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
             self.docs.extend(doc)
