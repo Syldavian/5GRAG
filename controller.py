@@ -49,6 +49,10 @@ Question: {input}""")
                 raw_doc = pickle.load(handle)    
             # End Pickle mode
 
+            print('done')
+            #print("metadata: ")
+            #print(raw_doc[0].metadata)
+
             #print(raw_doc[:5])
             doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
             self.docs.extend(doc)
