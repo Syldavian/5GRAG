@@ -11,6 +11,7 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.retrievers.self_query.base import SelfQueryRetriever
 
 import pytesseract
 import os
@@ -49,9 +50,8 @@ Question: {input}""")
                 raw_doc = pickle.load(handle)    
             # End Pickle mode
 
-            print('done')
-            #print("metadata: ")
-            #print(raw_doc[0].metadata)
+            print("metadata: ")
+            print(raw_doc[0].metadata)
 
             #print(raw_doc[:5])
             doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
@@ -77,9 +77,28 @@ Question: {input}""")
         self.updateDocs()
         vector = FAISS.from_documents(self.docs, embeddings) 
         #self.retriever = vector.as_retriever()
-        self.retriever = MultiQueryRetriever.from_llm(
-    retriever=vector.as_retriever(), llm=self.llm
-) #express query in multiple ways to improve hit rate
+        document_content_description = "Technical specification"
+        metadata_field_info = [
+                AttributeInfo(
+                    name="source",
+                    description="The technical specification the chunk is from, should be one of `data/ts_138331v160100p.pdf`, `data/ts_138211v160200p.pdf`, or `data/ts_138331v170700p.pdf`",
+                    type="string",
+                ),
+                AttributeInfo(
+                    name="page",
+                    description="The page from the technical specification",
+                    type="integer",
+                ),
+            ]
+        
+
+        self.retriever = SelfQueryRetriever.from_llm(
+                    self.llm,
+                    vector,
+                    document_content_description,
+                    metadata_field_info,
+                    verbose=True
+                ) #express query in multiple ways to improve hit rate
         
         self.isCreated = True
 
