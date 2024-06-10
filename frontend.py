@@ -51,7 +51,7 @@ with gr.Blocks() as demo:
     toggleDB.click(fn=adjustToggle,outputs = toggleDB)
     chatbot=gr.Chatbot(height=500)
     textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7)
-    selected_docs = gr.Dropdown(choices=docs, multiselect=True, value='all')
-    textbox.submit(respond,inputs=[textbox,chatbot, selected_docs],outputs=chatbot)
+    selected_docs = gr.Dropdown(choices=docs, multiselect=True)
+    textbox.submit(respond,inputs=[textbox,chatbot,selected_docs],outputs=chatbot)
 
 demo.launch(share=True)

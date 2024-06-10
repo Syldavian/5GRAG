@@ -78,10 +78,7 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        self.vector = FAISS.from_documents(self.docs, embeddings) 
-        self.retriever = MultiQueryRetriever.from_llm(
-                            retriever=self.vector.as_retriever(), llm=self.llm
-                        ) 
+        self.vector = Chroma.from_documents(self.docs, embeddings) 
         
         self.isCreated = True
 
@@ -99,16 +96,20 @@ Question: {input}""")
         if not self.isCreated:
             self.createVectorStore()
 
-        # If we have selected one or more docs, then apply filtering
-        if len(selected_docs) > 0:
+        print('Selected Docs: ', selected_docs)
+        if selected_docs is None or len(selected_docs) == 0:
+            self.retriever = MultiQueryRetriever.from_llm(
+                            retriever=self.vector.as_retriever(), llm=self.llm
+                        ) 
+        else:
+            # If we have selected one or more docs, then apply filtering
             name_list = ['./files/' + doc for doc in selected_docs]
+            print("name_list: ", name_list)
             name_filter = {"source": {"$in": name_list}}
             self.retriever = MultiQueryRetriever.from_llm(
                             retriever=self.vector.as_retriever(search_kwargs={'filter': name_filter}), llm=self.llm
-                        ) 
+                        )            
 
-
-        
         if prompt:
             print(f"Ctrl + C to exit...")
             #doc_chain is a chain that lets you pass a document to the llm and it uses that to answer
