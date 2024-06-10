@@ -37,6 +37,7 @@ Question: {input}""")
         self.docs = None
         self.isCreated = False
         self.isDatabaseTriggered = True
+        self.vector = None
 
     def updateDocs(self):
         #We need a separate loader for each document. 
@@ -77,13 +78,13 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        vector = Chroma.from_documents(self.docs, embeddings) 
+        self.vector = Chroma.from_documents(self.docs, embeddings) 
         #self.retriever = vector.as_retriever()
         document_content_description = "Technical specification"
         metadata_field_info = [
                 AttributeInfo(
                     name="source",
-                    description="The technical specification the chunk is from, should be one of `data/ts_138331v160100p.pdf`, `data/ts_138211v160200p.pdf`, or `data/ts_138331v170700p.pdf`",
+                    description="The technical specification the chunk is from, should be one of `data/38211-i20.pdf`, `data/ts_138331v160100p.pdf`, `data/ts_138211v160200p.pdf`, or `data/ts_138331v170700p.pdf`",
                     type="string",
                 ),
                 AttributeInfo(
@@ -94,13 +95,17 @@ Question: {input}""")
             ]
         
 
-        self.retriever = SelfQueryRetriever.from_llm(
+        """self.retriever = SelfQueryRetriever.from_llm(
                     self.llm,
                     vector,
                     document_content_description,
                     metadata_field_info,
                     verbose=True
-                ) #express query in multiple ways to improve hit rate
+                ) #express query in multiple ways to improve hit rate"""
+
+        self.retriever = self.vector.as_retriever()
+
+
         
         self.isCreated = True
 
@@ -113,10 +118,17 @@ Question: {input}""")
         return message_objects
     
 
-    def runController(self, prompt, history):
+    def runController(self, prompt, history, selected_docs):
         print(f"history is {history}")
         if not self.isCreated:
             self.createVectorStore()
+
+        # If we have selected one or more docs, then apply filtering
+        if len(selected_docs) > 0:
+            name_list = ['./files/' + doc for doc in selected_docs]
+            name_filter = {"source": {"$in": name_list}}
+            self.retriever = self.vector.as_retriever(search_kwargs={'filter': name_filter})
+        
         if prompt:
             print(f"Ctrl + C to exit...")
             #doc_chain is a chain that lets you pass a document to the llm and it uses that to answer
