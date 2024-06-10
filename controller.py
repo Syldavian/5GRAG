@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser #converts output into string
 from langchain_core.prompts import ChatPromptTemplate 
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS, Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -12,6 +12,7 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.retrievers.multi_query import MultiQueryRetriever
 from langchain.retrievers.self_query.base import SelfQueryRetriever
+from langchain.chains.query_constructor.base import AttributeInfo
 
 import pytesseract
 import os
@@ -75,7 +76,7 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        vector = FAISS.from_documents(self.docs, embeddings) 
+        vector = Chroma.from_documents(self.docs, embeddings) 
         #self.retriever = vector.as_retriever()
         document_content_description = "Technical specification"
         metadata_field_info = [
