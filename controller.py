@@ -4,6 +4,7 @@ from langchain_core.output_parsers import StrOutputParser #converts output into 
 from langchain_core.prompts import ChatPromptTemplate 
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS, Chroma
+from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.chains.combine_documents import create_stuff_documents_chain
