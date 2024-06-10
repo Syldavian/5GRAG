@@ -78,34 +78,10 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        self.vector = Chroma.from_documents(self.docs, embeddings) 
-        #self.retriever = vector.as_retriever()
-        document_content_description = "Technical specification"
-        metadata_field_info = [
-                AttributeInfo(
-                    name="source",
-                    description="The technical specification the chunk is from, should be one of `data/38211-i20.pdf`, `data/ts_138331v160100p.pdf`, `data/ts_138211v160200p.pdf`, or `data/ts_138331v170700p.pdf`",
-                    type="string",
-                ),
-                AttributeInfo(
-                    name="page",
-                    description="The page from the technical specification",
-                    type="integer",
-                ),
-            ]
-        
-
-        """self.retriever = SelfQueryRetriever.from_llm(
-                    self.llm,
-                    vector,
-                    document_content_description,
-                    metadata_field_info,
-                    verbose=True
-                ) #express query in multiple ways to improve hit rate"""
-
-        self.retriever = self.vector.as_retriever()
-
-
+        self.vector = FAISS.from_documents(self.docs, embeddings) 
+        self.retriever = MultiQueryRetriever.from_llm(
+                            retriever=self.vector.as_retriever(), llm=self.llm
+                        ) 
         
         self.isCreated = True
 
@@ -127,7 +103,11 @@ Question: {input}""")
         if len(selected_docs) > 0:
             name_list = ['./files/' + doc for doc in selected_docs]
             name_filter = {"source": {"$in": name_list}}
-            self.retriever = self.vector.as_retriever(search_kwargs={'filter': name_filter})
+            self.retriever = MultiQueryRetriever.from_llm(
+                            retriever=self.vector.as_retriever(search_kwargs={'filter': name_filter}), llm=self.llm
+                        ) 
+
+
         
         if prompt:
             print(f"Ctrl + C to exit...")
