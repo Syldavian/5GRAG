@@ -3,7 +3,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser #converts output into string
 from langchain_core.prompts import ChatPromptTemplate 
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS, Chroma
+from langchain_pinecone import PineconeVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -11,9 +12,12 @@ from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.retrievers.multi_query import MultiQueryRetriever
+from langchain.retrievers.self_query.base import SelfQueryRetriever
+from langchain.chains.query_constructor.base import AttributeInfo
 
 import pytesseract
 import os
+import pickle
 
 pytesseract.pytesseract.tesseract_cmd = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 
@@ -33,6 +37,7 @@ Question: {input}""")
         self.docs = None
         self.isCreated = False
         self.isDatabaseTriggered = True
+        self.vector = None
 
     def updateDocs(self):
         #We need a separate loader for each document. 
@@ -41,7 +46,16 @@ Question: {input}""")
         for file in os.listdir(DOC_DIR):
             loader = PyPDFLoader(os.path.join(DOC_DIR,file))
             print(f"Document is {loader.file_path}")
-            raw_doc = loader.load_and_split()
+            # raw_doc = loader.load_and_split() 
+
+            # Adam Chen Pickle Mode
+            with open(os.path.join(DOC_DIR,file), 'rb') as handle:
+                raw_doc = pickle.load(handle)    
+            # End Pickle mode
+
+            print("metadata: ")
+            print(raw_doc[0].metadata)
+
             #print(raw_doc[:5])
             doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
             self.docs.extend(doc)
@@ -64,11 +78,34 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        vector = FAISS.from_documents(self.docs, embeddings) 
+        self.vector = Chroma.from_documents(self.docs, embeddings) 
         #self.retriever = vector.as_retriever()
-        self.retriever = MultiQueryRetriever.from_llm(
-    retriever=vector.as_retriever(), llm=self.llm
-) #express query in multiple ways to improve hit rate
+        document_content_description = "Technical specification"
+        metadata_field_info = [
+                AttributeInfo(
+                    name="source",
+                    description="The technical specification the chunk is from, should be one of `data/38211-i20.pdf`, `data/ts_138331v160100p.pdf`, `data/ts_138211v160200p.pdf`, or `data/ts_138331v170700p.pdf`",
+                    type="string",
+                ),
+                AttributeInfo(
+                    name="page",
+                    description="The page from the technical specification",
+                    type="integer",
+                ),
+            ]
+        
+
+        """self.retriever = SelfQueryRetriever.from_llm(
+                    self.llm,
+                    vector,
+                    document_content_description,
+                    metadata_field_info,
+                    verbose=True
+                ) #express query in multiple ways to improve hit rate"""
+
+        self.retriever = self.vector.as_retriever()
+
+
         
         self.isCreated = True
 
@@ -81,10 +118,17 @@ Question: {input}""")
         return message_objects
     
 
-    def runController(self, prompt, history):
+    def runController(self, prompt, history, selected_docs):
         print(f"history is {history}")
         if not self.isCreated:
             self.createVectorStore()
+
+        # If we have selected one or more docs, then apply filtering
+        if len(selected_docs) > 0:
+            name_list = ['./files/' + doc for doc in selected_docs]
+            name_filter = {"source": {"$in": name_list}}
+            self.retriever = self.vector.as_retriever(search_kwargs={'filter': name_filter})
+        
         if prompt:
             print(f"Ctrl + C to exit...")
             #doc_chain is a chain that lets you pass a document to the llm and it uses that to answer
