@@ -14,9 +14,6 @@ output_parser = StrOutputParser()
 
 
 
-
-API_KEY = "sk-proj-SFGbEuYv6K5tIDJ70Ym7T3BlbkFJQ6NFXw9fRh195cQfaUO2"
-
 # vector store part
 # this lets you load the data you want to index into the vector store
 
