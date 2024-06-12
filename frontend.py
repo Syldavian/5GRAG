@@ -24,21 +24,6 @@ def adjustToggle():
     return text
 
 
-# More improved UI Deprecated chatInterface ise
-"""demo = gr.ChatInterface(
-    langchain_controller.runController,
-    chatbot=gr.Chatbot(height=500),
-    textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7),
-    title="5G Expert",
-    description="Ask any question",
-    theme="soft",
-#    examples=["Hello", "Am I cool?", "Are tomatoes vegetables?"],
-#    cache_examples=True,
-    retry_btn=None,
-    undo_btn="Delete Previous",
-    clear_btn="Clear",
-)
-demo.launch(share=True)"""
 
 # idea: design function for the submit. This function will have as inputs, prompt and history
 # get history from chatbot. As output, have "", history so both q and answer will go into chatbot
