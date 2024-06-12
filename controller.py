@@ -78,7 +78,9 @@ Question: {input}""")
               documents that will be retrieved."""
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         self.updateDocs()
-        self.vector = Chroma.from_documents(self.docs, embeddings) 
+        #Adam Chen Hotfix Use Local DB
+        self.vector = Chroma(persist_directory="./Chroma", embedding_function=embeddings)
+        # self.vector = Chroma.from_documents(self.docs, embeddings) 
         
         self.isCreated = True
 
