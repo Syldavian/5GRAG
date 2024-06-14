@@ -5,7 +5,7 @@ from langchain.chains import ConversationChain
 from typing import Optional, Tuple
 from threading import Lock
 from settings import config
-
+import os
 
 langchain_controller = Controller()
 langchain_controller.createVectorStore()
