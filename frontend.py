@@ -4,6 +4,8 @@ from controller import Controller
 from langchain.chains import ConversationChain
 from typing import Optional, Tuple
 from threading import Lock
+from settings import config
+
 
 langchain_controller = Controller()
 langchain_controller.createVectorStore()
@@ -28,6 +30,7 @@ def adjustToggle():
 # idea: design function for the submit. This function will have as inputs, prompt and history
 # get history from chatbot. As output, have "", history so both q and answer will go into chatbot
 
+DOC_DIR = config["DOC_DIR"]
 file_lst = []
 for file in os.listdir(DOC_DIR):
     if file[-7:] == ".pickle":
