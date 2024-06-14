@@ -43,9 +43,13 @@ demo.launch(share=True)"""
 # idea: design function for the submit. This function will have as inputs, prompt and history
 # get history from chatbot. As output, have "", history so both q and answer will go into chatbot
 
+file_lst = []
+for file in os.listdir(DOC_DIR):
+    if file[-7:] == ".pickle":
+        file = file[:-7]
+    file_lst.append(file)
 
-
-docs = ['38211-i20.pdf', 'ts_138331v160100p.pdf', 'ts_138211v160200p.pdf', 'ts_138331v170700p.pdf']
+docs = file_lst
 with gr.Blocks() as demo:
     toggleDB = gr.Button("RAG ENABLED CURRENTLY")
     toggleDB.click(fn=adjustToggle,outputs = toggleDB)
