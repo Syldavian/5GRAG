@@ -1,9 +1,6 @@
 import gradio as gr
 
 from controller import Controller
-from langchain.chains import ConversationChain
-from typing import Optional, Tuple
-from threading import Lock
 from settings import config
 import os
 
@@ -12,12 +9,17 @@ langchain_controller.createVectorStore()
 
 
 def respond(prompt,history,selected_docs):
+    """@prompt: question to the model
+    @history: the history of the conversation, stored in "turns" of HumanMessage,AIMessage
+    @selected_docs: a list of documents that were selected from the dropdown."""
     resp = langchain_controller.runController(prompt,history,selected_docs)
     history.append((prompt,resp))
     return history
 
 
 def adjustToggle():
+    """This function controls whether RAG/ Vector DB is used or not.
+    It keeps the controller and the frontend in sync by coupling them."""
     IS_DB = langchain_controller.toggleDatabase()
     if IS_DB:
         text = "RAG ENABLED CURRENTLY"
