@@ -19,7 +19,8 @@ gradio
 langchain_openai
 langchain_community
 chromadb
-pypdf
+bs4
+docx2txt
 
 # Goals:
 Get System working again

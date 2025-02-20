@@ -8,3 +8,11 @@ def unzipFile(filepath,dest_dir):
         zf.extractall(path=dest_dir)
     
     os.remove(filepath)
+
+class RefObj:
+    def __init__(self,reference:str,src:str):
+        self.reference = reference
+        self.src = src
+    
+    def __repr__(self):
+        return f'Reference: {self.reference}, Source Document: {self.src}'
