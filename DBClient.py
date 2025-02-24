@@ -1,6 +1,7 @@
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import Docx2txtLoader
+import chromadb
 from settings import config
 import pickle
 import os 
@@ -28,9 +29,12 @@ class DBClient:
         return docs
 
     def constructBaseDB(self,embedding_model):
-        """We must populate the db with the initial files in the `DOC_DIR` directory"""
-        docs = self.addDocsFromFilePath(os.listdir(config['DOC_DIR']))
-        return Chroma.from_documents(docs,embedding_model)
+        """Connect to the underlying chromadb"""
+        #docs = self.addDocsFromFilePath(os.listdir(config['DOC_DIR']))
+        pers_client = chromadb.PersistentClient(path=config["CHROMA_DIR"])
+        vector_db = Chroma(client=pers_client,embedding_function=embedding_model)
+
+        return vector_db
     
     def __init__(self,embedding_model):
         #construct chroma base db            
@@ -42,6 +46,14 @@ class DBClient:
         to the vector store."""
         new_docs = self.addDocsFromFilePath(new_file_list)
         self.vector_db.add_documents(new_docs)
+
+    def delFromDB(self):
+        """This is a placeholder function. 
+        Whilst doing this definitely prevents the retriever from fetching things with these docs as source,
+        It still seems able to answer questions based on it."""
+        self.vector_db.delete(where={'source':{'$eq':'data/38214-hc0.docx'}})
+        self.vector_db.delete(where={'source':{'$eq':'data/38176-2-gc0.docx'}})
+        self.vector_db.delete(where={'source':{'$eq':'data/38741-i31.docx'}})
 
     def getRetriever(self,search_kwargs=None):
         if search_kwargs == None:
