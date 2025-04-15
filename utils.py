@@ -9,6 +9,9 @@ def unzipFile(filepath,dest_dir):
     
     os.remove(filepath)
 
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
 class RefObj:
     def __init__(self,reference:str,src:str):
         self.reference = reference

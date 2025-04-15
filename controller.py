@@ -1,7 +1,8 @@
 from settings import config
 from DBClient import DBClient
 from AutoFetcher import AutoFetcher
-from utils import unzipFile
+from ReferenceExtractor import ReferenceExtractor
+from utils import unzipFile, RefObj
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser #converts output into string
 from langchain_core.prompts import ChatPromptTemplate 
@@ -17,6 +18,8 @@ API_KEY = config["API_KEY"]
 M_NAME = config["MODEL_NAME"]
 DOC_DIR = config["DOC_DIR"]
 IS_PICKLE = config["IS_PICKLE"]
+
+RExt = ReferenceExtractor()
 
 class Controller:
     def __init__(self):
@@ -46,7 +49,7 @@ Question: {input}""")
 
         #update chroma
         self.db.updateDB(file_list)
-
+        print(f"done resyncing")
         #reconstruct retriever
 
     def toggleDatabase(self):
@@ -85,6 +88,20 @@ Question: {input}""")
                             retriever=self.db.getRetriever(search_kwargs={'filter': name_filter}), llm=self.llm
                         )            
 
+    def getResponseWithRetrieval(self,prompt,history):
+        doc_chain = create_stuff_documents_chain(self.llm, self.prompt)
+        retrieval_chain = create_retrieval_chain(self.retriever, doc_chain)
+    
+        resp = retrieval_chain.invoke({"input":prompt,"history": history})
+
+        """all_docs = resp['context'][:]
+        ext_src: list[RefObj] = RExt.runREWithDocList(docs=all_docs)
+        #print(f"ext_src is {ext_src[0].reference}")
+        for refObj in ext_src:
+            res = self.retriever.invoke(f"You are an expert retriever with access to a vector database. Parse through the database, and only return data from this section: {refObj.reference}")
+            print(f"for ref {refObj.reference}, res is {res}")"""
+
+        return resp
 
     def runController(self, prompt, history, selected_docs):
 
@@ -97,10 +114,8 @@ Question: {input}""")
             # retrieval chain passed the load of deciding what document to use to answer to the retriever.
             history = self.convert_history(history)
             if self.isDatabaseTriggered:
-                doc_chain = create_stuff_documents_chain(self.llm, self.prompt)
-                retrieval_chain = create_retrieval_chain(self.retriever, doc_chain)
-    
-                resp = retrieval_chain.invoke({"input":prompt,"history": history})
+                resp = self.getResponseWithRetrieval(prompt,history)
+                #print(f"resp is {resp}")
                 response = resp['answer']
             else:
                 chain = self.prompt | self.llm

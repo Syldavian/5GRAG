@@ -26,3 +26,7 @@ docx2txt
 Get System working again
 Refactor & clean up
 Build automatic fetching of docs
+
+# Things of note:
+Initializing the db only happens when the resync button is hit. 
+The DB is peristent so between runs it

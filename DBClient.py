@@ -1,31 +1,18 @@
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import Docx2txtLoader
+from langchain_core.documents import Document
+from MetadataAwareChunker import getSectionedChunks
 import chromadb
 from settings import config
 import pickle
 import os 
-
 class DBClient:
     def addDocsFromFilePath(self,file_list):
-        """@file_list: list(str) of file names. Not absolute paths"""
+        """@file_list: list(str) of file names. Not absolute/relative paths"""
         docs = []
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, add_start_index=True) #creates a text splitter, which breaks apart the document into text
-        for file in file_list:
-            loader = Docx2txtLoader(os.path.join(config['DOC_DIR'],file))
-
-            if not config['IS_PICKLE']:
-                raw_doc = loader.load_and_split() 
-            # Adam Chen Pickle Mode
-            else:
-                with open(os.path.join(config['DOC_DIR'],file), 'rb') as handle:
-                    raw_doc = pickle.load(handle)    
-            # End Pickle mode
-            print("metadata: ")
-            print(raw_doc[0].metadata)
-
-            doc = text_splitter.split_documents(raw_doc) #applies the text splitter to the documents
-            docs.extend(doc)
+        file_list = [os.path.join(config['DOC_DIR'],file) for file in file_list]
+        docs = getSectionedChunks(file_list)
         return docs
 
     def constructBaseDB(self,embedding_model):
@@ -60,3 +47,6 @@ class DBClient:
             return self.vector_db.as_retriever()
         return self.vector_db.as_retriever(search_kwargs=search_kwargs)
     
+if __name__ == "__main__":
+    file_list = ["38214-hc0.docx"]
+    print(DBClient.addDocsFromFilePath(file_list))
