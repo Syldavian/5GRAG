@@ -73,15 +73,7 @@ Question: {input}""")
     
 
     def getResponseWithRetrieval(self,prompt,history):
-        
         resp = self.retriever.invoke(query=prompt,history=history,db=self.db)
-        """all_docs = resp['context'][:]
-        ext_src: list[RefObj] = RExt.runREWithDocList(docs=all_docs)
-        #print(f"ext_src is {ext_src[0].reference}")
-        for refObj in ext_src:
-            res = self.retriever.invoke(f"You are an expert retriever with access to a vector database. Parse through the database, and only return data from this section: {refObj.reference}")
-            print(f"for ref {refObj.reference}, res is {res}")"""
-
         return resp
 
     def runController(self, prompt, history, selected_docs):
@@ -102,7 +94,6 @@ Question: {input}""")
                 chain = self.prompt | self.llm
                 resp = chain.invoke({"input":prompt,"history": history})
                 response = resp.content
-            #print(f"resp is {resp}")
             return response
     
 if __name__ == "__main__":
