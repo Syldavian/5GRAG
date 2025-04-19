@@ -2,6 +2,8 @@ import re
 from utils import RefObj
 from langchain_core.documents import Document
 
+SRC_DOC = "Current_Doc"
+
 class ReferenceExtractor:
     def __init__(self):
         self.regxs=[]
@@ -35,7 +37,7 @@ class ReferenceExtractor:
             if match:
                 src = match.group()
             else:
-                src = "Current_Doc"
+                src = SRC_DOC
             refWithoutSrc = matchedStr.replace(f" of {src}","")
             references.append(RefObj(reference=refWithoutSrc,src=src))
         return references
@@ -52,6 +54,20 @@ class ReferenceExtractor:
             references = self.extractDocumentFromStrings(matchedStrings)
             allRefs.extend(references)
         return allRefs
+    
+    def extractClauseNumbersOfSrc(self,refs:list[RefObj])->list[str]:
+        results = set()
+        patterns = [r"(\d+(.\d+)*)",r"(\d+([.\d+|\-\d])*)"]
+        extractRegxs = [ re.compile(pattern) for pattern in patterns]
+        for ref in refs:
+            if ref.src == SRC_DOC:
+                for regx in extractRegxs:
+                    temp = regx.findall(ref.reference)
+                    if temp:
+                        for tup in temp:
+                            if len(tup)>0 and tup[-1] != ".":
+                                results.add(tup[0]) 
+        return list(results)
 
 
 if __name__ == "__main__":

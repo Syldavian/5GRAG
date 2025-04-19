@@ -15,6 +15,13 @@ def parse_table(table):
             else:
                 yield col.text
 
+def process_section_name(section_name:str)->str:
+    """@input: (str)  section name.
+    This is a helper function to process the section name into a numerical format.
+    We do this to keep it consistent with how external references will be searched for.
+    """
+    return section_name.split("\t")[0]
+
 def getSectionedChunks(file_list):
     """@input: file_list. List of files in relative path that will be chunked.
     Returns: master list chunks_with_metadata that has chunks of all the files stored as langchain Documents.
@@ -41,7 +48,6 @@ def getSectionedChunks(file_list):
                 current_section_text = ""
                 current_section_title = part.text
             elif "table" in part.style.name.lower():
-                print(f"*******HERE IS TABLE*********\n")
                 for table_datum in parse_table(part):
                     current_section_text += table_datum
             else:
@@ -56,7 +62,7 @@ def getSectionedChunks(file_list):
             for chunk in split_chunks:
                 chunks_with_metadata.append(Document(
                     page_content=chunk,
-                    metadata={'source':file,'section':section_name}
+                    metadata={'source':file,'section':process_section_name(section_name)}
                 ))
     return chunks_with_metadata
 
@@ -80,5 +86,5 @@ def getFullFileChunks(file_list):
     return chunks
 
 if __name__ =="__main__":
-    file_list = ["./data/TestFile.docx"]
-    print(getSectionedChunks(file_list))
+    file_list = ["./data/38101-5-hb0.docx"]
+    print(getSectionedChunks(file_list)[0:40])
