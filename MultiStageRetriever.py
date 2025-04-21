@@ -4,6 +4,7 @@ from utils import RefObj
 from ReferenceExtractor import ReferenceExtractor
 import os 
 from settings import config
+from langchain_core.prompts import ChatPromptTemplate 
 
 RExt = ReferenceExtractor()
 DOC_DIR = config["DOC_DIR"]
@@ -12,11 +13,15 @@ NUM_EXTRA_DOCS = config["NUM_EXTRA_DOCS"]
 class MultiStageRetriever:
     def __init__(self,llm,prompt_template):
         self.llm = llm
-        self.doc_chain = create_stuff_documents_chain(self.llm, prompt_template)
+        self.document_prompt = ChatPromptTemplate.from_template("""
+        Page content: {page_content} \n
+        From clause: {section}
+        """)
+        self.doc_chain = create_stuff_documents_chain(self.llm, prompt_template, document_prompt=self.document_prompt)
         self.selected_docs = None
 
     def reconstructDocChain(self,new_prompt_template):
-        self.doc_chain = create_stuff_documents_chain(self.llm,new_prompt_template)
+        self.doc_chain = create_stuff_documents_chain(self.llm,new_prompt_template,document_prompt=self.document_prompt)
 
     def constructRetriever(self,db,selected_docs=None):
         """@selected_docs: list of documents to filter.
