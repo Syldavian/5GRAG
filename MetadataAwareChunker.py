@@ -91,6 +91,45 @@ def getSectionedChunks(file_list):
                 ))
     return chunks_with_metadata
 
+def getFullSectionChunks(file_list):
+    chunks_with_metadata = []
+    for file in file_list:
+        f = open(file,'rb')
+        doc = DocParser(f)
+
+        current_section_title = BASE_SECTION_NAME
+        current_section_text = ""
+        sections = []
+
+        for part in doc.iter_inner_content():
+            if part.style.name.startswith('Heading'):
+                # update current section
+                sections.append((current_section_text,current_section_title))
+                current_section_text = ""
+                current_section_title = part.text
+            elif "table" in part.style.name.lower():
+                for table_datum in parse_table(part):
+                    current_section_text += table_datum
+            else:
+                # append text to current section
+                current_section_text += part.text
+        
+        #Add last section to sections
+        sections.append((current_section_text,current_section_title))
+
+        addMetadata = {}
+        for text,section_name in sections:
+            if section_name == BASE_SECTION_NAME and not addMetadata:
+                addMetadata = addExtraDocumentWideMetadata(text)
+                print(f"metadata is {addMetadata}")
+            
+            chunks_with_metadata.append(Document(
+                page_content=text,
+                metadata = {'source':file,'section':process_section_name(section_name),**addMetadata}
+            ))
+
+        return chunks_with_metadata
+
 def getFullFileChunks(file_list):
     chunks = []
     for file in file_list:
@@ -111,6 +150,15 @@ def getFullFileChunks(file_list):
     return chunks
 
 if __name__ =="__main__":
-    file_list = ["./data/38141-2-gk0.docx"]
-    print(getSectionedChunks(file_list)[80:90])
-    #print(addExtraDocumentWideMetadata("3GPP TS 38.101-5 V17.11.0 (2025-03)3GPP TS 38.101-5 V17.11.0 (2025-03)Technical Specification\nTechnical Specification\n3rd Generation Partnership Project;\nTechnical Specification Group Radio Access Network;"))
+    file_list = ["./data/38141-2-gk0.docx","./data/v16diffver.docx"]
+    #print(getSectionedChunks(file_list)[80:90])
+    sectioned_things = {}
+    for doc in getFullSectionChunks([file_list[0]]):
+        sectioned_things[doc.metadata["section"]] = sectioned_things.get(doc.metadata["section"],[]) + [doc.page_content]
+
+    for doc in getFullSectionChunks([file_list[1]]):
+        sectioned_things[doc.metadata["section"]] = sectioned_things.get(doc.metadata["section"],[]) + [doc.page_content]
+    
+    print(sectioned_things['2'])
+    
+    
