@@ -11,7 +11,9 @@ from utils import unzipFile
 # 2) When do we pull and when do we not?
 
 class AutoFetcher:
-    def __init__(self,fetch_endpoints,post_processing_func):
+    def __init__(self,fetch_endpoints:list[str],post_processing_func):
+        """@fetch_endpoints: list of the endpoints that the AF will query with a get request when `AF.run()` is invoked.\n
+        @post_processing_func: the function that is run on the fetched files."""
         self.links = {}
         self.fetch_endpoints = fetch_endpoints
         self.post_processing_func = post_processing_func
@@ -22,6 +24,7 @@ class AutoFetcher:
         @params: search parameters for the request. Try to sort all the links by upload date. 
         The assumption is that the last link after sorting is the most recent one."""
         response = requests.get(endpoint,params=params)
+        print(response)
         if response.status_code != 200:
             raise Exception("Error: Could not retrieve page content")
         soup = BeautifulSoup(response.content,'html.parser')
@@ -55,7 +58,7 @@ class AutoFetcher:
         self.post_processing_func(filepath,config['DOC_DIR'])
         return filename
 
-    def run(self,params):
+    def run(self,params=None):
         file_list = []
         for endpoint in self.fetch_endpoints:
             self.extractLinksFromEndpoint(endpoint,params)

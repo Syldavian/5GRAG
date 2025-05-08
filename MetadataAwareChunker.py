@@ -1,7 +1,10 @@
 from docx import Document as DocParser
+import docx
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 import re
+from collections.abc import Callable
+from langchain_community.document_loaders import Docx2txtLoader
 
 BASE_SECTION_NAME = "N/A"
 
@@ -24,7 +27,13 @@ def process_section_name(section_name:str)->str:
     """
     return section_name.split("\t")[0]
 
-def addExtraDocumentWideMetadata(text_chunk:str):
+def extract_core_properties(file)->dict:
+    """This is a helper to pull out the core properties of a docx file"""
+    core_obj = file.core_properties
+    return {'author':core_obj.author,'title':core_obj.title,'subject':core_obj.subject}
+
+def addExtraDocumentWideMetadataForContext(text_chunk:str):
+    """Use this for 3gpp specs"""
     extractVersionAndDocIDRegx = re.compile(r"(3GPP TS (\d+.\d+|\-\d)+ V\d+.\d+.\d)",re.IGNORECASE)
     extractVersion = re.compile(r"(V\d+.\d+.\d)")
     extractDocument = re.compile(r"(TS (\d+.\d+|\-\d)+)")
@@ -40,8 +49,21 @@ def addExtraDocumentWideMetadata(text_chunk:str):
     metadata = {'version':version,'docID':docID}
     return metadata
 
-def getSectionedChunks(file_list):
+def addExtraDocumentWideMetadataForReason(text_chunk:str):
+    """Use this for TDocs"""
+    extractVersion = re.compile(r"(V\d+.\d+.\d)")
+    searchRes = extractVersion.search(text_chunk)
+    if searchRes:
+        version = searchRes.group()
+    else:
+        return {}
+    
+    metadata = {'version':version}
+    return metadata
+
+def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dict]=addExtraDocumentWideMetadataForContext):
     """@input: file_list. List of files in relative path that will be chunked.
+    @addExtraDocumentWideMetadata: func that returns a dictionary with extra metadata that will be added to all chunks.
     Returns: master list chunks_with_metadata that has chunks of all the files stored as langchain Documents.
     These Documents have section metadata"""
     chunks_with_metadata= []
@@ -49,6 +71,8 @@ def getSectionedChunks(file_list):
 
         f = open(file,'rb')
         doc = DocParser(f)
+
+        file_metadata = extract_core_properties(doc)
 
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000,chunk_overlap=200,add_start_index=True)
 
@@ -60,12 +84,13 @@ def getSectionedChunks(file_list):
         # We want to collect (section_text,current_section) where section_text is a combination of paragraphs
         # Then, we use the text_splitter to split it into split chunks
         for part in doc.iter_inner_content():
-            if part.style.name.startswith('Heading'):
+            #print(f"part is {part}")
+            if isinstance(part,docx.text.paragraph.Paragraph) and part.style.name.startswith('Heading'):
                 # update current section
                 sections.append((current_section_text,current_section_title))
                 current_section_text = ""
                 current_section_title = part.text
-            elif "table" in part.style.name.lower():
+            elif isinstance(part,docx.table.Table):
                 for table_datum in parse_table(part):
                     current_section_text += table_datum
             else:
@@ -87,27 +112,29 @@ def getSectionedChunks(file_list):
             for chunk in split_chunks:
                 chunks_with_metadata.append(Document(
                     page_content=chunk,
-                    metadata={'source':file,'section':process_section_name(section_name),**addMetadata}
+                    metadata={'source':file,'section':process_section_name(section_name),**addMetadata,**file_metadata}
                 ))
     return chunks_with_metadata
 
-def getFullSectionChunks(file_list):
+def getFullSectionChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dict]=addExtraDocumentWideMetadataForContext):
     chunks_with_metadata = []
     for file in file_list:
         f = open(file,'rb')
         doc = DocParser(f)
+
+        file_metadata = extract_core_properties(doc)
 
         current_section_title = BASE_SECTION_NAME
         current_section_text = ""
         sections = []
 
         for part in doc.iter_inner_content():
-            if part.style.name.startswith('Heading'):
+            if isinstance(part,docx.text.paragraph.Paragraph) and part.style.name.startswith('Heading'):
                 # update current section
                 sections.append((current_section_text,current_section_title))
                 current_section_text = ""
                 current_section_title = part.text
-            elif "table" in part.style.name.lower():
+            elif isinstance(part,docx.table.Table):
                 for table_datum in parse_table(part):
                     current_section_text += table_datum
             else:
@@ -125,7 +152,7 @@ def getFullSectionChunks(file_list):
             
             chunks_with_metadata.append(Document(
                 page_content=text,
-                metadata = {'source':file,'section':process_section_name(section_name),**addMetadata}
+                metadata = {'source':file,'section':process_section_name(section_name),**addMetadata,**file_metadata}
             ))
 
         return chunks_with_metadata
@@ -150,7 +177,7 @@ def getFullFileChunks(file_list):
     return chunks
 
 if __name__ =="__main__":
-    file_list = ["./data/38141-2-gk0.docx","./data/v16diffver.docx"]
+    """file_list = ["./data/38214-hc0.docx","./data/v16diffver.docx"]
     #print(getSectionedChunks(file_list)[80:90])
     sectioned_things = {}
     for doc in getFullSectionChunks([file_list[0]]):
@@ -159,6 +186,9 @@ if __name__ =="__main__":
     for doc in getFullSectionChunks([file_list[1]]):
         sectioned_things[doc.metadata["section"]] = sectioned_things.get(doc.metadata["section"],[]) + [doc.page_content]
     
-    print(sectioned_things['2'])
+    print(sectioned_things['2'])"""
+    file_list = ["./data/R299-041.docx"]
+    #print(Docx2txtLoader(file_list[0]).load())
+    print(getSectionedChunks(file_list))
     
     

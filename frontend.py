@@ -25,8 +25,11 @@ def adjustToggle():
         text = "RAG DISABLED CURRENTLY"
     return text
 
-def resyncDB():
-    langchain_controller.resyncDB()
+def updateContextDB():
+    langchain_controller.updateContextDB()
+
+def updateReasonDB():
+    langchain_controller.updateReasonDB()
 
 # idea: design function for the submit. This function will have as inputs, prompt and history
 # get history from chatbot. As output, have "", history so both q and answer will go into chatbot
@@ -42,9 +45,12 @@ def getFileList():
 
 with gr.Blocks() as demo:
     toggleDB = gr.Button("RAG ENABLED CURRENTLY")
-    toggleReSync = gr.Button("RESYNC")
+    toggleReSync = gr.Button("Fetch latest specs for context")
+    toggleReSyncTDocs = gr.Button("Fetch latest TDocs")
+
     toggleDB.click(fn=adjustToggle,outputs = toggleDB)
-    toggleReSync.click(fn=resyncDB)
+    toggleReSync.click(fn=updateContextDB)
+    toggleReSyncTDocs.click(fn=updateReasonDB)
     
     chatbot=gr.Chatbot(height=500)
     textbox=gr.Textbox(placeholder="Ask me any question", container=False, scale=7)

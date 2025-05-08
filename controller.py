@@ -1,7 +1,7 @@
 from settings import config
 from DBClient import DBClient
 from AutoFetcher import AutoFetcher
-from utils import unzipFile
+from utils import unzipFile,convertAllDocToDocx
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser #converts output into string
 from langchain_core.prompts import ChatPromptTemplate 
@@ -26,17 +26,22 @@ class Controller:
 Question: {input}""")
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         
-        self.db = DBClient(embedding_model=embeddings)
+        self.contextDB = DBClient(embedding_model=embeddings)
+        self.reasonDB = DBClient(embedding_model=embeddings,collection_name="reason")
+
         endpoints = ["https://www.3gpp.org/ftp/Specs/latest/Rel-16/38_series","https://www.3gpp.org/ftp/Specs/latest/Rel-17/38_series"]
         #endpoints += ["https://www.3gpp.org/ftp/Specs/latest/Rel-18/38_series"]
         self.params = params = {"sortby":"date"}
         self.af = AutoFetcher(endpoints,unzipFile)
 
+        otherEndpoints = ["https://www.3gpp.org/ftp/TSG_RAN/WG2_RL2/TSGR2_01/Docs/zips"]
+        self.afReason = AutoFetcher(otherEndpoints,unzipFile)
+
         self.retriever = MultiStageRetriever(llm=self.llm,prompt_template = self.prompt)
 
         self.isDatabaseTriggered = True
 
-    def resyncDB(self):
+    def updateContextDB(self):
         """Scan dir for new docs and add them"""
         #Fetch new docs
         print(f"resyncing on controller end")
@@ -45,9 +50,19 @@ Question: {input}""")
         #split & break down new docs
 
         #update chroma
-        self.db.updateDB(file_list)
+        self.contextDB.updateDB(file_list)
         print(f"done resyncing")
-        #reconstruct retriever
+        #reconstruct retriever'
+    
+    def updateReasonDB(self):
+        """Fetches latest tdocs and reads into the reason collection"""
+        print(f"Hit the update reason!")
+        file_list = self.afReason.run()
+        convertAllDocToDocx(DOC_DIR)
+        file_list = [file[:-4] + ".docx" for file in file_list]
+        
+        self.reasonDB.updateDB(file_list)
+        print("updated collection!")
 
     def toggleDatabase(self):
         """Switches from RAG mode to non-RAG mode"""
@@ -73,13 +88,13 @@ Question: {input}""")
     
 
     def getResponseWithRetrieval(self,prompt,history):
-        resp = self.retriever.invoke(query=prompt,history=history,db=self.db)
+        resp = self.retriever.invoke(query=prompt,history=history,db=self.contextDB)
         return resp
 
     def runController(self, prompt, history, selected_docs):
 
         print('Selected Docs: ', selected_docs)
-        self.retriever.constructRetriever(db=self.db,selected_docs=selected_docs)
+        self.retriever.constructRetriever(db=self.contextDB,selected_docs=selected_docs)
 
         if prompt:
             print(f"Ctrl + C to exit...")
