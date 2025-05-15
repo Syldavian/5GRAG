@@ -31,6 +31,19 @@ Question: {input}""")
 
         endpoints = ["https://www.3gpp.org/ftp/Specs/latest/Rel-16/38_series","https://www.3gpp.org/ftp/Specs/latest/Rel-17/38_series"]
         #endpoints += ["https://www.3gpp.org/ftp/Specs/latest/Rel-18/38_series"]
+        #ORAN Docs
+        print("38 series")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.300","https://www.3gpp.org/ftp/Specs/archive/38_series/38.401","https://www.3gpp.org/ftp/Specs/archive/38_series/38.321","https://www.3gpp.org/ftp/Specs/archive/38_series/38.322","https://www.3gpp.org/ftp/Specs/archive/38_series/38.323","https://www.3gpp.org/ftp/Specs/archive/38_series/38.331",]
+        print("23 series")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/23_series/23.501","https://www.3gpp.org/ftp/Specs/archive/23_series/23.502"]
+        print("f1 interface")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.470","https://www.3gpp.org/ftp/Specs/archive/38_series/38.473"]
+        print("e1 interface")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.460","https://www.3gpp.org/ftp/Specs/archive/38_series/38.463"]
+        print("xn interface")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.420","https://www.3gpp.org/ftp/Specs/archive/38_series/38.423"]
+        print("ng interface")
+        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.410","https://www.3gpp.org/ftp/Specs/archive/38_series/38.413"]
         self.params = params = {"sortby":"date"}
         self.af = AutoFetcher(endpoints,unzipFile)
 
