@@ -8,7 +8,7 @@ class ReferenceExtractor:
     def __init__(self):
         self.regxs=[]
         self.extractDocRegx = re.compile(r"\[\d+, [A-Za-z0-9_\. ]*\]",re.IGNORECASE)
-        patterns = [r"(clause\s+(\d+(.\d+)*).?(of \[\d+, [A-Za-z0-9_\. ]*\])?)",r"(Table\s+(\d+([.\d+|\-\d])*).?)"]
+        patterns = [r"(clause\s+(\d+(.\d+)*).?(of \[\d+, [A-Za-z0-9_\. ]*\])?)",r"(Table\s+(\d+([.\d+|\-\d])*).?)",r"(subclause\s+(\d+(.\d+)*))",r"(subclauses\s+(\d+(.\d+)*) and (\d+(.\d+)*))"]
         for pattern in patterns:
             #re.compile turns a string into a regex. 
             self.regxs.append(re.compile(pattern,re.IGNORECASE))
@@ -94,5 +94,6 @@ if __name__ == "__main__":
     ref = ReferenceExtractor()
     #matchedStrings = re.findAllMatches(examples[2])
     #print(re.extractDocumentFromStrings(matchedStrings))
-    examples = ["3GPP TS 38.413 V17.2.0 (2022-09)","NGAP is developed in accordance to the general principles stated in TS 38.401 [2] and TS 38.410 [3].","[1] 3GPP TR 21.905: 'Vocabulary for 3GPP Specifications'.","For each PDU session, if the Network Instance IE is included in the PDU Session Resource Setup Request Transfer IE contained in the PDU SESSION RESOURCE SETUP REQUEST message and the Common Network Instance IE is not present, the NG-RAN node shall, if supported, use it when selecting transport network resource as specified in TS 23.501 [9]."]
-    print(ref.extractDocIdsFromStrList(examples))
+    examples = ["If an Abstract Syntax Error occurs, the receiver shall read the remaining message and shall then for each detected Abstract Syntax Error that belong to cases 1-3 and 6 act according to the Criticality Information and Presence Information for the IE/IE group due to which Abstract Syntax Error occurred in accordance with subclauses 10.3.7 and 10.3.8.","This criticality information instructs the receiver how to act when receiving an IE or an IE group that is not comprehended, i.e., the entire item (IE or IE group) which is not (fully or partially) comprehended shall be treated in accordance with its own criticality information as specified in subclause 10.3.9."]
+    examples = [Document(ex)for ex in examples]
+    print(ref.extractClauseNumbersOfSrc(ref.runREWithDocList(examples)))
