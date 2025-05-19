@@ -13,7 +13,6 @@ import os
 API_KEY = config["API_KEY"]
 M_NAME = config["MODEL_NAME"]
 DOC_DIR = config["DOC_DIR"]
-IS_PICKLE = config["IS_PICKLE"]
 
 class Controller:
     def __init__(self):
@@ -86,9 +85,9 @@ Question: {input}""")
 {context}
 </context>
 Question: {input}""")
+            self.retriever.reconstructDocChain(self.prompt)
         else:
             self.prompt = ChatPromptTemplate.from_template("""Answer the following question as best you can Question: {input}""")
-        self.retriever.reconstructDocChain(self.prompt)
         return self.isDatabaseTriggered
 
     def convert_history(self, history):
@@ -101,8 +100,8 @@ Question: {input}""")
     
 
     def getResponseWithRetrieval(self,prompt,history):
-        resp = self.retriever.invoke(query=prompt,history=history,db=self.contextDB)
-        return resp
+        resp,orig_docs,additional_docs = self.retriever.invoke(query=prompt,history=history,db=self.contextDB)
+        return resp,orig_docs,additional_docs
 
     def runController(self, prompt, history, selected_docs):
 
@@ -115,14 +114,15 @@ Question: {input}""")
             # retrieval chain passed the load of deciding what document to use to answer to the retriever.
             history = self.convert_history(history)
             if self.isDatabaseTriggered:
-                resp = self.getResponseWithRetrieval(prompt,history)
+                resp,orig_docs,additional_docs = self.getResponseWithRetrieval(prompt,history)
                 print(f"resp is {resp}")
                 response = resp['answer']
             else:
                 chain = self.prompt | self.llm
                 resp = chain.invoke({"input":prompt,"history": history})
                 response = resp.content
-            return response
+                orig_docs,additional_docs = [],[]
+            return response,orig_docs,additional_docs
     
 if __name__ == "__main__":
     c = Controller()

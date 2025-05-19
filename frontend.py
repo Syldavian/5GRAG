@@ -10,9 +10,9 @@ def respond(prompt,history,selected_docs):
     """@prompt: question to the model
     @history: the history of the conversation, stored in "turns" of HumanMessage,AIMessage
     @selected_docs: a list of documents that were selected from the dropdown."""
-    resp = langchain_controller.runController(prompt,history,selected_docs)
+    resp,orig_docs,additional_docs = langchain_controller.runController(prompt,history,selected_docs)
     history.append((prompt,resp))
-    return history
+    return history,orig_docs,additional_docs
 
 
 def adjustToggle():
@@ -38,8 +38,6 @@ DOC_DIR = config["DOC_DIR"]
 def getFileList():
     file_lst = []
     for file in os.listdir(DOC_DIR):
-        if file[-7:] == ".pickle":
-            file = file[:-7]
         file_lst.append(file)
     return gr.Dropdown(choices=file_lst,multiselect=True)
 
@@ -58,6 +56,9 @@ with gr.Blocks() as demo:
     selected_docs = gr.Dropdown(choices=[], multiselect=True)
     textbox.change(fn=getFileList,outputs=[selected_docs])
 
-    textbox.submit(respond,inputs=[textbox,chatbot,selected_docs],outputs=chatbot)
+    retrieved_orig_docs = gr.Textbox(label="Chunks that were originally retrieved")
+    retrieved_additional_docs = gr.Textbox(label="Chunks that were secondarily retrieved, via deep context")
+
+    textbox.submit(respond,inputs=[textbox,chatbot,selected_docs],outputs=[chatbot,retrieved_orig_docs,retrieved_additional_docs])
 
 demo.launch(share=True)

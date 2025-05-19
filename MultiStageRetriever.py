@@ -82,6 +82,6 @@ class MultiStageRetriever:
 
         resp_answer = self.doc_chain.invoke({"context":retrieved_docs,"input":query,"history":history})
         resp = {"input":query,"history":history,"context":retrieved_docs,"answer":resp_answer}
-        return resp
+        return resp,org_docs,additional_docs
     
     
