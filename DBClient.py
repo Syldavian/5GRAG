@@ -5,7 +5,6 @@ from langchain_core.documents import Document
 from MetadataAwareChunker import getSectionedChunks
 import chromadb
 from settings import config
-import pickle
 import os 
 class DBClient:
     def addDocsFromFilePath(self,file_list):
