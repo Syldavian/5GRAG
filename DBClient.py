@@ -27,12 +27,15 @@ class DBClient:
         #construct chroma base db            
         self.vector_db = self.constructBaseDB(embedding_model,collection_name=collection_name)
 
-    def updateDB(self,new_file_list):
-        """@new_file_list: list(str) list of file names (not abs paths)
-        Turn the new files in DOC_DIR into a list of documents and add them
-        to the vector store."""
+    def updateDB(self, new_file_list, batch_size=5000):
+        """Update the vector DB in batches to avoid exceeding Chroma limits."""
         new_docs = self.addDocsFromFilePath(new_file_list)
-        self.vector_db.add_documents(new_docs)
+
+        for i in range(0, len(new_docs), batch_size):
+            batch = new_docs[i:i + batch_size]
+            self.vector_db.add_documents(batch)
+
+        print(f"Added {len(new_docs)} documents in batches.")
 
     def delFromDB(self):
         """This is a placeholder function. 

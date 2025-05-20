@@ -29,21 +29,123 @@ Question: {input}""")
         self.contextDB = DBClient(embedding_model=embeddings)
         self.reasonDB = DBClient(embedding_model=embeddings,collection_name="reason")
 
-        endpoints = ["https://www.3gpp.org/ftp/Specs/latest/Rel-16/38_series","https://www.3gpp.org/ftp/Specs/latest/Rel-17/38_series"]
-        #endpoints += ["https://www.3gpp.org/ftp/Specs/latest/Rel-18/38_series"]
-        #ORAN Docs
+        # 38 series (NR and NG-RAN general)
         print("38 series")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.300","https://www.3gpp.org/ftp/Specs/archive/38_series/38.401","https://www.3gpp.org/ftp/Specs/archive/38_series/38.321","https://www.3gpp.org/ftp/Specs/archive/38_series/38.322","https://www.3gpp.org/ftp/Specs/archive/38_series/38.323","https://www.3gpp.org/ftp/Specs/archive/38_series/38.331",]
-        print("23 series")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/23_series/23.501","https://www.3gpp.org/ftp/Specs/archive/23_series/23.502"]
+        endpoints = [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.300",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.401",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.331",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.321",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.322",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.323",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.340"
+        ]
+
+        # F1 interface (CU-DU split)
         print("f1 interface")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.470","https://www.3gpp.org/ftp/Specs/archive/38_series/38.473"]
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.470",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.471",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.472",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.473"
+        ]
+
+        # E1 interface (CU-CP / CU-UP split)
         print("e1 interface")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.460","https://www.3gpp.org/ftp/Specs/archive/38_series/38.463"]
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.460",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.463"
+        ]
+
+        # Xn interface (gNB to gNB)
         print("xn interface")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.420","https://www.3gpp.org/ftp/Specs/archive/38_series/38.423"]
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.420",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.423"
+        ]
+
+        # NG interface (gNB to 5GC)
         print("ng interface")
-        endpoints += ["https://www.3gpp.org/ftp/Specs/archive/38_series/38.410","https://www.3gpp.org/ftp/Specs/archive/38_series/38.413"]
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.410",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.413",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.425"
+        ]
+
+        # Dual connectivity and multi-RAT
+        print("37 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.340",
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.324",
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.460",
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.471",
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.472",
+            "https://www.3gpp.org/ftp/Specs/archive/37_series/37.473"
+        ]
+
+        # LTE (E-UTRAN RAN architecture)
+        print("36 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.300",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.401",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.410",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.413",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.420",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.423",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.331",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.321",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.322",
+            "https://www.3gpp.org/ftp/Specs/archive/36_series/36.323"
+        ]
+
+        # 5G System architecture and core interaction
+        print("23 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/23_series/23.501",
+            "https://www.3gpp.org/ftp/Specs/archive/23_series/23.401",
+            "https://www.3gpp.org/ftp/Specs/archive/23_series/23.236",
+            "https://www.3gpp.org/ftp/Specs/archive/23_series/23.251",
+            "https://www.3gpp.org/ftp/Specs/archive/23_series/23.316"
+        ]
+
+        # OAM and SON (Operations & Automation)
+        print("32 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/32_series/32.508",
+            "https://www.3gpp.org/ftp/Specs/archive/32_series/32.509",
+            "https://www.3gpp.org/ftp/Specs/archive/32_series/32.511",
+            "https://www.3gpp.org/ftp/Specs/archive/32_series/32.541",
+            "https://www.3gpp.org/ftp/Specs/archive/32_series/32.102"
+        ]
+
+        # UTRAN (3G RAN Architecture - background)
+        print("25 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/25_series/25.401",
+            "https://www.3gpp.org/ftp/Specs/archive/25_series/25.410",
+            "https://www.3gpp.org/ftp/Specs/archive/25_series/25.413",
+            "https://www.3gpp.org/ftp/Specs/archive/25_series/25.420",
+            "https://www.3gpp.org/ftp/Specs/archive/25_series/25.423"
+        ]
+
+        # Release overview and terminology
+        print("21 series")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/21_series/21.905"
+        ]
+
+        # RAN Study Items (TRs on architecture and functional splits)
+        print("study TRs")
+        endpoints += [
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.801",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.806",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.816",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.832",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.874",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.912",
+            "https://www.3gpp.org/ftp/Specs/archive/38_series/38.913"
+        ]
+
         self.params = params = {"sortby":"date"}
         self.af = AutoFetcher(endpoints,unzipFile)
 
@@ -59,6 +161,7 @@ Question: {input}""")
         #Fetch new docs
         print(f"resyncing on controller end")
         file_list = self.af.run(self.params)
+        convertAllDocToDocx(DOC_DIR)
         file_list = [file[:-4] + ".docx" for file in file_list]
         #split & break down new docs
 
