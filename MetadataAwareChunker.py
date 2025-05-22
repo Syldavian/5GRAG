@@ -4,7 +4,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 import re
 from collections.abc import Callable
-from langchain_community.document_loaders import Docx2txtLoader
+from utils import getFirstPageOfDocxInMarkdown,getMetadataFromLLM
 
 BASE_SECTION_NAME = "N/A"
 
@@ -32,7 +32,7 @@ def extract_core_properties(file)->dict:
     core_obj = file.core_properties
     return {'author':core_obj.author,'title':core_obj.title,'subject':core_obj.subject}
 
-def addExtraDocumentWideMetadataForContext(text_chunk:str):
+def addExtraDocumentWideMetadataForContext(text_chunk:str,filepath:str):
     """Use this for 3gpp specs"""
     extractVersionAndDocIDRegx = re.compile(r"(3GPP TS (\d+.\d+|\-\d)+ V\d+.\d+.\d)",re.IGNORECASE)
     extractVersion = re.compile(r"(V\d+.\d+.\d)")
@@ -49,19 +49,15 @@ def addExtraDocumentWideMetadataForContext(text_chunk:str):
     metadata = {'version':version,'docID':docID}
     return metadata
 
-def addExtraDocumentWideMetadataForReason(text_chunk:str):
+def addExtraDocumentWideMetadataForReason(text_chunk:str,filepath:str):
     """Use this for TDocs"""
-    extractVersion = re.compile(r"(V\d+.\d+.\d)")
-    searchRes = extractVersion.search(text_chunk)
-    if searchRes:
-        version = searchRes.group()
-    else:
-        return {}
-    
-    metadata = {'version':version}
+    mdData = getFirstPageOfDocxInMarkdown(filepath)
+    print(f"\n\n mddata is {mdData} \n\n")
+    metadata =getMetadataFromLLM(mdData)
+    print(metadata)
     return metadata
 
-def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dict]=addExtraDocumentWideMetadataForContext):
+def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str,str],dict]=addExtraDocumentWideMetadataForContext):
     """@input: file_list. List of files in relative path that will be chunked.
     @addExtraDocumentWideMetadata: func that returns a dictionary with extra metadata that will be added to all chunks.
     Returns: master list chunks_with_metadata that has chunks of all the files stored as langchain Documents.
@@ -85,7 +81,7 @@ def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dic
         # Then, we use the text_splitter to split it into split chunks
         for part in doc.iter_inner_content():
             #print(f"part is {part}")
-            if isinstance(part,docx.text.paragraph.Paragraph) and part.style.name.startswith('Heading'):
+            if isinstance(part,docx.text.paragraph.Paragraph) and part.style and part.style.name.startswith('Heading'):
                 # update current section
                 sections.append((current_section_text,current_section_title))
                 current_section_text = ""
@@ -106,7 +102,7 @@ def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dic
             split_chunks = text_splitter.split_text(text)
             
             if section_name == BASE_SECTION_NAME and not addMetadata:
-                addMetadata = addExtraDocumentWideMetadata(text)
+                addMetadata = addExtraDocumentWideMetadata(text,file)
                 print(f"metadata is {addMetadata}")
 
             for chunk in split_chunks:
@@ -116,7 +112,7 @@ def getSectionedChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dic
                 ))
     return chunks_with_metadata
 
-def getFullSectionChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],dict]=addExtraDocumentWideMetadataForContext):
+def getFullSectionChunks(file_list,addExtraDocumentWideMetadata:Callable[[str,str],dict]=addExtraDocumentWideMetadataForContext):
     chunks_with_metadata = []
     for file in file_list:
         f = open(file,'rb')
@@ -129,7 +125,7 @@ def getFullSectionChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],d
         sections = []
 
         for part in doc.iter_inner_content():
-            if isinstance(part,docx.text.paragraph.Paragraph) and part.style.name.startswith('Heading'):
+            if isinstance(part,docx.text.paragraph.Paragraph) and part.style and part.style.name.startswith('Heading'):
                 # update current section
                 sections.append((current_section_text,current_section_title))
                 current_section_text = ""
@@ -147,7 +143,7 @@ def getFullSectionChunks(file_list,addExtraDocumentWideMetadata:Callable[[str],d
         addMetadata = {}
         for text,section_name in sections:
             if section_name == BASE_SECTION_NAME and not addMetadata:
-                addMetadata = addExtraDocumentWideMetadata(text)
+                addMetadata = addExtraDocumentWideMetadata(text,file)
                 print(f"metadata is {addMetadata}")
             
             chunks_with_metadata.append(Document(
@@ -187,8 +183,8 @@ if __name__ =="__main__":
         sectioned_things[doc.metadata["section"]] = sectioned_things.get(doc.metadata["section"],[]) + [doc.page_content]
     
     print(sectioned_things['2'])"""
-    file_list = ["./data/R299-041.docx"]
+    file_list = ["./data/TR 38.845 v0.1.0.docx"]
     #print(Docx2txtLoader(file_list[0]).load())
-    print(getSectionedChunks(file_list))
+    print(getSectionedChunks(file_list,addExtraDocumentWideMetadataForReason)[:50])
     
     

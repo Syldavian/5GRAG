@@ -13,6 +13,8 @@ import os
 API_KEY = config["API_KEY"]
 M_NAME = config["MODEL_NAME"]
 DOC_DIR = config["DOC_DIR"]
+SPEC_COLL_NAME = config["SPEC_COLL_NAME"]
+TDOC_COLL_NAME = config["TDOC_COLL_NAME"]
 
 class Controller:
     def __init__(self):
@@ -26,7 +28,7 @@ Question: {input}""")
         embeddings = OpenAIEmbeddings(model='text-embedding-3-large',api_key=API_KEY) #Since we're using openAI's llm, we have to use its embedding model
         
         self.contextDB = DBClient(embedding_model=embeddings)
-        self.reasonDB = DBClient(embedding_model=embeddings,collection_name="reason")
+        self.reasonDB = DBClient(embedding_model=embeddings,collection_name=TDOC_COLL_NAME)
 
         # 38 series (NR and NG-RAN general)
         print("38 series")
