@@ -2,7 +2,7 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_core.documents import Document
-from MetadataAwareChunker import getSectionedChunks
+from MetadataAwareChunker import getSectionedChunks,addExtraDocumentWideMetadataForReason
 import chromadb
 from settings import config
 import os 
@@ -11,7 +11,11 @@ class DBClient:
         """@file_list: list(str) of file names. Not absolute/relative paths"""
         docs = []
         file_list = [os.path.join(config['DOC_DIR'],file) for file in file_list]
-        docs = getSectionedChunks(file_list)
+        if self.metadata_func:
+            docs = getSectionedChunks(file_list,addExtraDocumentWideMetadata=self.metadata_func)
+        else:
+            docs = getSectionedChunks(file_list)
+        
         return docs
 
     def constructBaseDB(self,embedding_model,collection_name):
@@ -22,9 +26,13 @@ class DBClient:
 
         return vector_db
     
-    def __init__(self,embedding_model,collection_name="context"):
+    def __init__(self,embedding_model,collection_name=config["SPEC_COLL_NAME"]):
         #construct chroma base db            
         self.vector_db = self.constructBaseDB(embedding_model,collection_name=collection_name)
+        if collection_name == config["TDOC_COLL_NAME"]:
+            self.metadata_func = addExtraDocumentWideMetadataForReason
+        else:
+            self.metadata_func = None
 
     def updateDB(self,new_file_list):
         """@new_file_list: list(str) list of file names (not abs paths)
