@@ -31,7 +31,7 @@ Question: {input}""")
         self.reasonDB = DBClient(embedding_model=embeddings,collection_name=TDOC_COLL_NAME)
 
         # 38 series (NR and NG-RAN general)
-        print("38 series")
+        #print("38 series")
         endpoints = [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.300",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.401",
@@ -43,7 +43,7 @@ Question: {input}""")
         ]
 
         # F1 interface (CU-DU split)
-        print("f1 interface")
+        #print("f1 interface")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.470",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.471",
@@ -52,21 +52,21 @@ Question: {input}""")
         ]
 
         # E1 interface (CU-CP / CU-UP split)
-        print("e1 interface")
+        #print("e1 interface")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.460",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.463"
         ]
 
         # Xn interface (gNB to gNB)
-        print("xn interface")
+        #print("xn interface")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.420",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.423"
         ]
 
         # NG interface (gNB to 5GC)
-        print("ng interface")
+        #print("ng interface")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.410",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.413",
@@ -74,7 +74,7 @@ Question: {input}""")
         ]
 
         # Dual connectivity and multi-RAT
-        print("37 series")
+        #print("37 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/37_series/37.340",
             "https://www.3gpp.org/ftp/Specs/archive/37_series/37.324",
@@ -85,7 +85,7 @@ Question: {input}""")
         ]
 
         # LTE (E-UTRAN RAN architecture)
-        print("36 series")
+        #print("36 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/36_series/36.300",
             "https://www.3gpp.org/ftp/Specs/archive/36_series/36.401",
@@ -100,7 +100,7 @@ Question: {input}""")
         ]
 
         # 5G System architecture and core interaction
-        print("23 series")
+        #print("23 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/23_series/23.501",
             "https://www.3gpp.org/ftp/Specs/archive/23_series/23.401",
@@ -110,7 +110,7 @@ Question: {input}""")
         ]
 
         # OAM and SON (Operations & Automation)
-        print("32 series")
+        #print("32 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/32_series/32.508",
             "https://www.3gpp.org/ftp/Specs/archive/32_series/32.509",
@@ -120,7 +120,7 @@ Question: {input}""")
         ]
 
         # UTRAN (3G RAN Architecture - background)
-        print("25 series")
+        #print("25 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/25_series/25.401",
             "https://www.3gpp.org/ftp/Specs/archive/25_series/25.410",
@@ -130,13 +130,13 @@ Question: {input}""")
         ]
 
         # Release overview and terminology
-        print("21 series")
+        #print("21 series")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/21_series/21.905"
         ]
 
         # RAN Study Items (TRs on architecture and functional splits)
-        print("study TRs")
+        #print("study TRs")
         endpoints += [
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.801",
             "https://www.3gpp.org/ftp/Specs/archive/38_series/38.806",
