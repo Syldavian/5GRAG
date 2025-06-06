@@ -306,7 +306,7 @@ Question: {input}""")
             history = self.convert_history(history)
             if self.isDatabaseTriggered:
                 resp,orig_docs,additional_docs = self.getResponseWithRetrieval(prompt,history)
-                print(f"resp is {resp}")
+                #print(f"resp is {resp}")
                 response = resp['answer']
             else:
                 chain = self.prompt | self.llm

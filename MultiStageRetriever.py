@@ -50,8 +50,8 @@ class MultiStageRetriever:
         ext_src: list[RefObj] = RExt.runREWithDocList(docs=org_docs)
         section_names = []
         section_names = RExt.extractClauseNumbersOfSrc(ext_src)
-        print(f"\n extr_src is {ext_src}\n")
-        print(f"section_names are {section_names}")
+        #print(f"\n extr_src is {ext_src}\n")
+        #print(f"section_names are {section_names}")
         if section_names == []:
             return []
 
@@ -73,9 +73,9 @@ class MultiStageRetriever:
         if not self.base_retriever:
             raise Exception("Error: No base retriever initialized. Has constructRetriever been run?")
         org_docs = self.base_retriever.invoke(query)
-        print(f"org docs are {org_docs}")
+        #print(f"org docs are {org_docs}")
         additional_docs = self.getAdditionalContext(org_docs,db)
-        print(f"\n\n additional docs are {additional_docs} \n\n")
+        #print(f"\n\n additional docs are {additional_docs} \n\n")
 
 
         retrieved_docs = org_docs + additional_docs
