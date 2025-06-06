@@ -1,7 +1,6 @@
 settings.yml
 __pycache__/
 data/*.docx
-docs/*
 chroma-db/*
 Chroma/*
 .gradio/

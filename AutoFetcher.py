@@ -26,7 +26,7 @@ class AutoFetcher:
         response = requests.get(endpoint,params=params)
         print(response)
         if response.status_code != 200:
-            raise Exception("Error: Could not retrieve page content")
+            raise Exception("Error: Could not retrieve page content from endpoint: " + endpoint)
         soup = BeautifulSoup(response.content,'html.parser')
         self.links[endpoint] = []
         for link in soup.find_all('a'):

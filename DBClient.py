@@ -29,20 +29,48 @@ class DBClient:
     def __init__(self,embedding_model,collection_name=config["SPEC_COLL_NAME"]):
         #construct chroma base db            
         self.vector_db = self.constructBaseDB(embedding_model,collection_name=collection_name)
-        if collection_name == config["TDOC_COLL_NAME"]:
-            self.metadata_func = addExtraDocumentWideMetadataForReason
-        else:
-            self.metadata_func = None
+        self.metadata_func = addExtraDocumentWideMetadataForReason
 
-    def updateDB(self, new_file_list, batch_size=5000):
-        """Update the vector DB in batches to avoid exceeding Chroma limits."""
-        new_docs = self.addDocsFromFilePath(new_file_list)
+    # Replace your updateDB method in DBClient.py with this:
 
-        for i in range(0, len(new_docs), batch_size):
-            batch = new_docs[i:i + batch_size]
-            self.vector_db.add_documents(batch)
+    def updateDB(self, new_file_list):
+        """@new_file_list: list(str) list of file names (not abs paths)
+        Turn the new files in DOC_DIR into a list of documents and add them
+        to the vector store."""
+        
+        # Process files one by one instead of all at once
+        for file_name in new_file_list:
+            try:
+                print(f"Processing {file_name}...")
+                new_docs = self.addDocsFromFilePath([file_name])  # Process one file at a time
+                
+                if new_docs:
+                    # Further batch the chunks if there are too many
+                    self.add_documents_in_batches(new_docs)
+                    print(f"Successfully processed {file_name} with {len(new_docs)} chunks")
+                else:
+                    print(f"No documents found for {file_name}")
+                    
+            except Exception as e:
+                print(f"Error processing {file_name}: {str(e)}")
+                continue
 
-        print(f"Added {len(new_docs)} documents in batches.")
+    def add_documents_in_batches(self, docs, batch_size=50):
+        """Add documents in smaller batches to avoid token limits"""
+        for i in range(0, len(docs), batch_size):
+            batch = docs[i:i + batch_size]
+            try:
+                print(f"Adding batch {i//batch_size + 1} ({len(batch)} chunks)")
+                self.vector_db.add_documents(batch)
+            except Exception as e:
+                print(f"Error adding batch: {str(e)}")
+                # If batch still fails, try individual chunks
+                for doc in batch:
+                    try:
+                        self.vector_db.add_documents([doc])
+                    except Exception as e2:
+                        print(f"Failed to add individual chunk: {str(e2)}")
+                        continue
 
     def delFromDB(self):
         """This is a placeholder function. 
