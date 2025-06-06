@@ -22,7 +22,9 @@ class TestCaseGapDiscovery:
     # ---------------------------------------------------------------------
     def __init__(self) -> None:
         self.controller = Controller()
-        self.llm = ChatOpenAI(api_key=config["API_KEY"], model=config["MODEL_NAME"])
+        self.llm_parser = ChatOpenAI(api_key=config["API_KEY"], model="gpt-4.1-mini")
+        # Full model for reasoning and analysis
+        self.llm_full = ChatOpenAI(api_key=config["API_KEY"], model=config["MODEL_NAME"])
 
         # ── 1A  Sentence‑level entity parser (unchanged) ──────────────────
         self.parser_prompt = ChatPromptTemplate.from_template(
@@ -151,7 +153,7 @@ class TestCaseGapDiscovery:
         print("\n--- Semantic Parsing with LLM ---")
         
         try:
-            chain = self.parser_prompt | self.llm
+            chain = self.parser_prompt | self.llm_parser
             response = chain.invoke({"sentence": sentence})
             
             # Clean the response and parse JSON
@@ -396,7 +398,7 @@ class TestCaseGapDiscovery:
     # ---------------------------------------------------------------------
     def _interpret_reference(self, original_sentence: str, parsed_data: Dict, combined_3gpp_context: str) -> Dict:
         """Phase 1 – what does the 3GPP reference actually require?"""
-        chain = self.reference_analysis_prompt | self.llm
+        chain = self.reference_analysis_prompt | self.llm_full
         raw = chain.invoke({
             "original_oran_sentence": original_sentence,
             "referenced_3gpp_document": parsed_data.get("referenced_3gpp_document", "Unknown"),
@@ -410,7 +412,7 @@ class TestCaseGapDiscovery:
     def _analyze_gaps(self, original_sentence: str, testable_items: Dict,
                        combined_oran_test_context: str) -> Dict:
         """Phase 2 – compare with existing O‑RAN test cases and find gaps."""
-        chain = self.gap_analysis_prompt | self.llm
+        chain = self.gap_analysis_prompt | self.llm_full
         raw = chain.invoke({
             "original_oran_sentence": original_sentence,
             "testable_items_json": json.dumps(testable_items, indent=2),
